@@ -9,6 +9,6 @@ app.use(express.static(publicPath));
 app.get('/', (req, res) => {
 
 });
-app.listen(port, process.env.IP () => {
+app.listen(port, process.env.IP, () => {
   console.log(`Server up and running on port ${port}`);
 });
