@@ -23,6 +23,19 @@ io.on('connection', (socket) => {
   //   text: 'Hasta la Vista, Baby'
   // });
 
+  // Greet a new user and notify others about him
+  socket.emit('newMessage', {
+    from: 'Admin',
+    text: 'Welcome Comrade!',
+    createdAt: new Date().getTime()
+  });
+
+  socket.broadcast.emit('newMessage', {
+    from: 'Admin',
+    text: 'New User incoming',
+    createdAt: new Date().getTime()
+  })
+
   // io.emit broadcasts the event to all the connections
   socket.on('createMessage', (message) => {
     console.log('User: ', message);
@@ -33,6 +46,15 @@ io.on('connection', (socket) => {
       text: message.text,
       createdAt: new Date().getTime()
     })
+
+    // // Broadcasting events: sending message to everyone except some
+    // // Here we will broadcast the newMessage to everyone except the
+    // // person who sent it
+    // socket.broadcast.emit('newMessage', {
+    //   from: message.from,
+    //   text: message.text,
+    //   createdAt: new Date().getTime()
+    // });
   });
 
   socket.on('disconnect', () => {
