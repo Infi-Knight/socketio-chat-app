@@ -22,11 +22,12 @@ io.on('connection', (socket) => {
   socket.broadcast.emit('newMessage', generateMessage('Admin', 'New User here'));
 
   // io.emit broadcasts the event to all the connections
-  socket.on('createMessage', (message) => {
-    console.log('User: ', message);
+  // second argument for the callback is an acknowledgement
+  socket.on('createMessage', (message, callback) => {
     // We recieved a message from the user 
     // Now broadcast the message to all the users
     io.emit('newMessage', generateMessage (message.from, message.text));
+    callback('Server: your data was acknowledged');
   });
 
   socket.on('disconnect', () => {
