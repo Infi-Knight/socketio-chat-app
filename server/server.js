@@ -18,8 +18,8 @@ io.on('connection', (socket) => {
   console.log('New user connected');
   
   // Greet a new user and notify others about him
-  socket.emit('newMessage', generateMessage('Admin', 'Welcome Comrade!'));
-  socket.broadcast.emit('newMessage', generateMessage('Admin', 'New User here'));
+  socket.emit('newMessage', generateMessage('Admin', 'How you doin?'));
+  socket.broadcast.emit('newMessage', generateMessage('Admin', 'New guy here!!'));
 
   // io.emit broadcasts the event to all the connections
   // second argument for the callback is an acknowledgement
@@ -27,7 +27,7 @@ io.on('connection', (socket) => {
     // We recieved a message from the user 
     // Now broadcast the message to all the users
     io.emit('newMessage', generateMessage (message.from, message.text));
-    callback('Server: your data was acknowledged');
+    callback();
   });
 
   socket.on('createLocationMessage', (coords) => {
