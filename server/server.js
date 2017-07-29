@@ -6,20 +6,19 @@ const path = require('path');
 const port = process.env.PORT || 3000;
 const publicPath = path.join(__dirname, '../public');
 
+const {generateMessage, generateLocationMessage} = require('./utils/message');
+const {isRealString} = require('./utils/validation');
+const {Users} = require('./utils/users');
+
 var app = express();
 var server = http.createServer(app);
 var io = socketIO(server);
-
-const {generateMessage, generateLocationMessage} = require('./utils/message');
+var users = new Users();
 
 app.use(express.static(publicPath));
 
 io.on('connection', (socket) => {
   console.log('New user connected');
-  
-  // Greet a new user and notify others about him
-  socket.emit('newMessage', generateMessage('Admin', 'How you doin?'));
-  socket.broadcast.emit('newMessage', generateMessage('Admin', 'New guy here!!'));
 
   // io.emit broadcasts the event to all the connections
   // second argument for the callback is an acknowledgement
@@ -34,8 +33,31 @@ io.on('connection', (socket) => {
     io.emit('newLocationMessage', generateLocationMessage('Admin', coords.latitude, coords.longitude));
   });
 
+  socket.on('join', (params, callback) => {
+    if (!isRealString(params.name) || !isRealString(params.room)) {
+      // prevent the further execution in case of validation error
+      return callback('Name and room are both required');
+    }
+
+    socket.join(params.room);
+    // remove the user from existing rooms and then join him to a room
+    users.removeUser(socket.id);
+    users.addUser(socket.id, params.name, params.room);
+
+    io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+    socket.emit('newMessage', generateMessage('Admin', 'How you doin?'));
+    socket.broadcast.to(params.room).emit('newMessage', generateMessage('Admin', `${params.name} has joined`));
+
+    callback();
+  });
+
   socket.on('disconnect', () => {
-    console.log('User Disconnected');
+    var user = users.removeUser(socket.id);
+
+    if (user) {
+      io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+      io.to(user.room).emit('newMessage', generateMessage('Admin', `${user.name} has left the room`));
+    }
   });
 });
 
