@@ -1,6 +1,5 @@
 const express = require('express');
 const http = require('http');
-
 const socketIO = require('socket.io');
 const path = require('path');
 const port = process.env.PORT || 3000;
@@ -25,12 +24,19 @@ io.on('connection', (socket) => {
   socket.on('createMessage', (message, callback) => {
     // We recieved a message from the user 
     // Now broadcast the message to all the users
-    io.emit('newMessage', generateMessage (message.from, message.text));
+    var user = users.getUser(socket.id);
+    if (user && message.text) {
+      io.to(user.room).emit('newMessage', generateMessage (user.name, message.text));
+    }  
     callback();
   });
 
   socket.on('createLocationMessage', (coords) => {
-    io.emit('newLocationMessage', generateLocationMessage('Admin', coords.latitude, coords.longitude));
+    var user = users.getUser(socket.id);
+
+    if (user) {
+      io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude));
+    } 
   });
 
   socket.on('join', (params, callback) => {
@@ -72,8 +78,6 @@ app.get('/test', (req, res) => {
 server.listen(port, process.env.IP, () => {
   console.log(`Server up and running on port ${port}`);
 });
-
-
 
 // socket.emit emits an event to a single connection
 // first argument is the name of the event we want to emit
